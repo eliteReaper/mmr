@@ -1,1 +1,5 @@
 key
+server/core/__pycache__
+server/core/utils/__pycache__
+server/core/.ipynb_checkpoints/
+env

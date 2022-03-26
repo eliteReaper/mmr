@@ -1,5 +1,6 @@
 import sys
 import pandas as pd
+import sklearn
 from sklearn.neighbors import NearestNeighbors
 
 from consts import MOVIES_CSV, RATINGS_CSV, MediaType
