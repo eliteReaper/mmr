@@ -1,6 +1,16 @@
-key
+# Django & Python
 server/core/__pycache__
 server/core/utils/__pycache__
 server/core/.ipynb_checkpoints/
+server/core/djangoserver/__pycache__
+server/core/modelserve/__pycache__
+server/core/modelserve/.ipynb_checkpoints/
+server/core/db.sqlite3
+
+# Node
 server/node_modules
+
+# Global
+key
 env
+.idea
