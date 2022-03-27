@@ -1,0 +1,2 @@
+categorical_crossentropy, categorical_accuracy -> 2% by epoch 25, Layers: LSTM:256, LSTM:256, Dense:32
+sparse_categorical_crossentropy, categorical_accuracy -> Just bad dont do

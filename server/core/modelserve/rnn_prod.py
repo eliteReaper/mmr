@@ -1,3 +1,4 @@
+
 from locale import normalize
 import pandas as pd
 from collections import defaultdict, deque
@@ -9,9 +10,9 @@ from tqdm import tqdm
 
 MOVIES_DATASET = "./data/movies.csv"
 RATINGS_DATASET = "./data/ratings.csv"
-NUMBER_OF_USER_WATCHED_MIN = 5
-NUMBER_OF_MOVIES_WATCHED_MIN = 10
-TRAIN_TEST_SPLIT = 0.9
+NUMBER_OF_USER_WATCHED_MIN = 50
+NUMBER_OF_MOVIES_WATCHED_MIN = 20
+TRAIN_TEST_SPLIT = 0.7
 SEQ_LEN = NUMBER_OF_MOVIES_WATCHED_MIN
 
 # # Preprocessing Movies Dataset
@@ -60,9 +61,9 @@ map_genres_to_idx()
 
 def one_hot_encode_movie(movieId):
     num_movies = len(movie_mapper)
-    encoded_movie = np.zeros(num_movies, dtype=int) 
-#     encoded_movie = [0] * num_movies
-    encoded_movie[movie_mapper[movieId]] = 1
+    encoded_movie = np.zeros(num_movies, dtype=np.float32) 
+    # encoded_movie = [0] * num_movies
+    encoded_movie[movie_mapper[movieId][0]] = 1
     return encoded_movie
 
 def one_hot_encode_user_seq(user_seq):
@@ -70,9 +71,8 @@ def one_hot_encode_user_seq(user_seq):
     for movie in user_seq:
         encoded.append(one_hot_encode_movie(movie))
     return np.array(encoded, dtype=object)
-#     return encoded
 
-def encode_movie(movieId):
+def encode_movie_with_genre(movieId):
     genres = movie_mapper[movieId][2]
     sz = len(all_genres)
     encoded = np.zeros(sz)
@@ -96,19 +96,16 @@ def sequentialize(ratings_df):
             sequence = deque(maxlen=SEQ_LEN)
             for movieId in user_seq:
                 if movieId not in movie_mapper: continue
-                sequence.append(encode_movie(movieId))
+                # sequence.append(encode_movie_with_genre(movieId))
+                sequence.append(one_hot_encode_movie(movieId))
                 if len(sequence) == SEQ_LEN:
                     X.append(list(itertools.islice(sequence, 0, SEQ_LEN - 1)))
-                    Y.append(sequence[-1])
-#             res = one_hot_encode_user_seq(user_seq)
-#             X.append(res[:-1])
-#             Y.append(res[-1])
-    return np.array(X), np.array(Y)
+                    Y.append(movie_mapper[movieId][0])
+    return np.array(X), np.array(Y) # Required
 
 def get_datasets():
     ratings_df = pd.read_csv(RATINGS_DATASET)
     ratings_df = ratings_df.dropna()
-#     ratings_df = ratings_df[:10000]
     
     sz = len(ratings_df)
     train_df = ratings_df[:int(TRAIN_TEST_SPLIT * sz)]
@@ -121,45 +118,34 @@ def get_datasets():
 
 X_train, Y_train, X_test, Y_test = get_datasets()
 
-print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
+
 
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM # CuDNNLSTM
-import tensorflow_hub as hub
-
-
-# model = "https://tfhub.dev/google/nnlm-en-dim50/2"
-# hub_layer = hub.KerasLayer(model, input_shape=[], dtype=tf.string, trainable=True)
-# print(hub_layer(X_train[0]))
 
 model = Sequential()
 
-
-# # IF you are running with a GPU, try out the CuDNNLSTM layer type instead (don't pass an activation, tanh is required)
-model.add(LSTM(128, activation='relu', return_sequences=True))
+model.add(LSTM(512, activation='relu', return_sequences=True))
 model.add(Dropout(0.2))
 
-model.add(LSTM(128, activation='relu'))
+model.add(LSTM(512, activation='relu'))
 model.add(Dropout(0.1))
 
-model.add(Dense(32, activation='relu'))
+model.add(Dense(64, activation='relu'))
 model.add(Dropout(0.2))
 
-model.add(Dense(len(all_genres), activation='softmax'))
+model.add(Dense(len(movie_mapper), activation='softmax'))
 
 opt = tf.keras.optimizers.Adam(learning_rate=0.001, decay=1e-6)
 
 # Compile model
 model.compile(
-    loss='mse',
+    loss='sparse_categorical_crossentropy',
     optimizer=opt,
-    metrics=['accuracy'],
+    metrics=['categorical_accuracy']
 )
 
 
-model.fit(X_train,
-          Y_train,
-          epochs=50,
-          validation_data=(X_test, Y_test))
+model.fit(X_train,Y_train,epochs=100,validation_data=(X_test, Y_test))
