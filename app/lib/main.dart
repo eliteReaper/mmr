@@ -1,12 +1,14 @@
 import 'dart:core';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mmr_app/utils/authentication_google.dart';
 import 'Screens/initial_screen.dart';
 import 'Screens/login_screen.dart';
 import 'Screens/main_Screen.dart';
 import 'helper/transition_route_observer.dart';
 
-void main() {
+void main()  {
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       systemNavigationBarColor:

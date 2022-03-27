@@ -1,4 +1,6 @@
 // import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -6,16 +8,21 @@ import 'package:flutter_login/flutter_login.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mmr_app/Screens/main_screen.dart';
 import 'package:mmr_app/main.dart';
+import 'package:mmr_app/utils/authentication_google.dart';
 
 import '../Constants/constants.dart';
 import '../TempFiles/users.dart';
 import '../helper/custom_route.dart';
 
-class LoginScreen extends StatelessWidget {
-
+class LoginScreen extends StatefulWidget {
   LoginScreen({Key? key}) : super(key: key);
   static const routeName = MyApp.Login_Screen;
 
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   // final FirebaseAuth _auth = FirebaseAuth.instance;
   Duration get loginTime => Duration(milliseconds: timeDilation.ceil() * 2250);
 
@@ -57,6 +64,7 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Authentication.initializeFirebase(context: context);
     return FlutterLogin(
       title: Constants.appName,
       logo: const AssetImage('assets/images/ecorp.png'),
@@ -67,6 +75,12 @@ class LoginScreen extends StatelessWidget {
       onConfirmSignup: _signupConfirm,
       loginAfterSignUp: false,
       loginProviders: [
+        // LoginProvider(
+        //   icon: FontAwesomeIcons.user,
+        //   label: 'Anonymous',
+        //   callback: () async {
+        //     return null;
+        //   }),
         LoginProvider(
           // button: Buttons.LinkedIn,
           icon: FontAwesomeIcons.linkedin,
@@ -81,17 +95,23 @@ class LoginScreen extends StatelessWidget {
             // put here your logic to conditionally show the additional fields
             return Future.value(true);
           },
-        ),// Linkedin
+        ), // Linkedin
+
         LoginProvider(
           icon: FontAwesomeIcons.google,
           label: 'Google',
           callback: () async {
             debugPrint('start google sign in');
-            await Future.delayed(loginTime);
+            // User? user =
+                // await Authentication.signInWithGoogle(context: context);
+            // if (user != null) {
+            //   Navigator.popAndPushNamed(context, MyApp.Main_Screen);
+            // } else {}
+            // await Future.delayed(loginTime);
             debugPrint('stop google sign in');
             return null;
           },
-        ),// Google
+        ), // Google
         LoginProvider(
           icon: FontAwesomeIcons.githubAlt,
           label: 'Github',
@@ -101,7 +121,7 @@ class LoginScreen extends StatelessWidget {
             debugPrint('stop github sign in');
             return null;
           },
-        ),// Github
+        ), // Github
         LoginProvider(
           icon: FontAwesomeIcons.facebook,
           label: 'Facebook',
@@ -111,7 +131,7 @@ class LoginScreen extends StatelessWidget {
             debugPrint('stop facebook sign in');
             return null;
           },
-        ),// Facebook
+        ), // Facebook
       ],
       termsOfService: [
         TermOfService(

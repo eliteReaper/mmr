@@ -3,15 +3,11 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mmr_app/main.dart';
+import 'package:mmr_app/utils/authentication_google.dart';
 
-class InitialScreen extends StatefulWidget {
+class InitialScreen extends StatelessWidget {
   const InitialScreen({Key? key}) : super(key: key);
 
-  @override
-  State<InitialScreen> createState() => _InitialScreenState();
-}
-
-class _InitialScreenState extends State<InitialScreen> {
   @override
   Widget build(BuildContext context) {
     Timer timer = Timer(const Duration(seconds: 5), (){
