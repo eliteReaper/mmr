@@ -1,5 +1,5 @@
 
-from locale import normalize
+from tkinter import TOP
 import pandas as pd
 from collections import defaultdict, deque
 import itertools
@@ -12,8 +12,9 @@ MOVIES_DATASET = "./data/movies.csv"
 RATINGS_DATASET = "./data/ratings.csv"
 NUMBER_OF_USER_WATCHED_MIN = 50
 NUMBER_OF_MOVIES_WATCHED_MIN = 20
-TRAIN_TEST_SPLIT = 0.7
-SEQ_LEN = NUMBER_OF_MOVIES_WATCHED_MIN
+TRAIN_TEST_SPLIT = 0.8
+SEQ_LEN = 10
+TOP_N = 10
 
 # # Preprocessing Movies Dataset
 
@@ -80,6 +81,11 @@ def encode_movie_with_genre(movieId):
         encoded[genre_mapper[genre]] = 1
     return encoded / np.linalg.norm(encoded)
 
+def one_hot_encode_movie_genre(movieId):
+    seq1 = one_hot_encode_movie(movieId)
+    seq2 = encode_movie_with_genre(movieId)
+    return np.concatenate((seq1,seq2))
+
 
 def sequentialize(ratings_df):
     ratings_df = ratings_df.dropna()
@@ -100,7 +106,8 @@ def sequentialize(ratings_df):
                 sequence.append(one_hot_encode_movie(movieId))
                 if len(sequence) == SEQ_LEN:
                     X.append(list(itertools.islice(sequence, 0, SEQ_LEN - 1)))
-                    Y.append(movie_mapper[movieId][0])
+                    Y.append(one_hot_encode_movie(movieId))
+                    # Y.append(sequence[-1])
     return np.array(X), np.array(Y) # Required
 
 def get_datasets():
@@ -119,33 +126,36 @@ def get_datasets():
 X_train, Y_train, X_test, Y_test = get_datasets()
 
 
-
-
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM # CuDNNLSTM
+from keras import backend as K
 
 model = Sequential()
 
-model.add(LSTM(512, activation='relu', return_sequences=True))
+model.add(LSTM(256, return_sequences=True))
 model.add(Dropout(0.2))
 
-model.add(LSTM(512, activation='relu'))
+model.add(LSTM(256))
 model.add(Dropout(0.1))
 
-model.add(Dense(64, activation='relu'))
-model.add(Dropout(0.2))
+# model.add(Dense(64, activation='relu'))
+# model.add(Dropout(0.2))
 
 model.add(Dense(len(movie_mapper), activation='softmax'))
 
-opt = tf.keras.optimizers.Adam(learning_rate=0.001, decay=1e-6)
+opt = tf.keras.optimizers.Adam(learning_rate=1e-4, decay=1e-6)
+
+def sps(y_true, y_pred):
+    return tf.keras.metrics.top_k_categorical_accuracy(y_true, y_pred, k=TOP_N)
+
 
 # Compile model
 model.compile(
-    loss='sparse_categorical_crossentropy',
+    loss='categorical_crossentropy',
     optimizer=opt,
-    metrics=['categorical_accuracy']
+    metrics=[sps]
 )
 
 
-model.fit(X_train,Y_train,epochs=100,validation_data=(X_test, Y_test))
+model.fit(X_train,Y_train,epochs=100,validation_data=(X_test, Y_test), batch_size=512)
