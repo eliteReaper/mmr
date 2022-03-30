@@ -38,7 +38,7 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.team_proj_mmr.mmr_app"
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 19//flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         versionCode flutterVersionCode.toInteger()
@@ -55,11 +55,12 @@ android {
 }
 
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.31"
     implementation platform('com.google.firebase:firebase-bom:29.2.1')
     implementation 'com.google.firebase:firebase-analytics'
-    androidTestImplementation 'androidx.test:runner:1.2.0'
-    androidTestImplementation 'androidx.test:rules:1.2.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     // https://firebase.google.com/docs/android/setup#available-libraries
 }

@@ -1,6 +1,3 @@
-// import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -8,10 +5,9 @@ import 'package:flutter_login/flutter_login.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mmr_app/Screens/main_screen.dart';
 import 'package:mmr_app/main.dart';
-import 'package:mmr_app/utils/authentication_google.dart';
 
 import '../Constants/constants.dart';
-import '../TempFiles/users.dart';
+import '../temp/users.dart';
 import '../helper/custom_route.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,13 +19,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // final FirebaseAuth _auth = FirebaseAuth.instance;
   Duration get loginTime => Duration(milliseconds: timeDilation.ceil() * 2250);
 
   Future<String?> _loginUser(LoginData data) {
     return Future.delayed(loginTime).then((_) {
       // TODO : Change the mock User here to the firebase Auth part
-
       if (!mockUsers.containsKey(data.name)) {
         return 'User not exists' + data.toString();
       }
@@ -64,10 +58,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Authentication.initializeFirebase(context: context);
     return FlutterLogin(
       title: Constants.appName,
-      logo: const AssetImage('assets/images/ecorp.png'),
+      // logo: const AssetImage('assets/images/ecorp.png'),
       logoTag: Constants.logoTag,
       titleTag: Constants.titleTag,
       navigateBackAfterRecovery: true,
@@ -105,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // User? user =
                 // await Authentication.signInWithGoogle(context: context);
             // if (user != null) {
-            //   Navigator.popAndPushNamed(context, MyApp.Main_Screen);
+              Navigator.popAndPushNamed(context, MyApp.Main_Screen);
             // } else {}
             // await Future.delayed(loginTime);
             debugPrint('stop google sign in');
@@ -305,7 +298,7 @@ class _LoginScreenState extends State<LoginScreen> {
       },
       onSubmitAnimationCompleted: () {
         Navigator.of(context).pushReplacement(FadePageRoute(
-          builder: (context) => const MainScreen(),
+          builder: (context) => const TempScreen(),
         ));
       },
       onRecoverPassword: (name) {
