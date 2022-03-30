@@ -3,6 +3,10 @@ import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mmr_app/Screens/Pages/account_page.dart';
+import 'package:mmr_app/Screens/Pages/game_page.dart';
+import 'package:mmr_app/Screens/Pages/movie_page.dart';
+import 'package:mmr_app/Screens/Pages/music_page.dart';
 import 'package:mmr_app/main.dart';
 
 
@@ -27,10 +31,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
   final screens = [
-    Container(child: Text('Movies'),),
-    Container(child: Text('Music'),),
-    Container(child: Text('Games'),),
-    Container(child: Text('Account'),),
+    MoviePage(),
+    MusicPage(),
+    GamePage(),
+    AccountPage(),
   ];
   @override
   Widget build(BuildContext context) {

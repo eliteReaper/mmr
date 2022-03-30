@@ -10,13 +10,13 @@ class InitialScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Timer timer = Timer(const Duration(seconds: 5), (){
+    Timer timer = Timer(const Duration(seconds: 2), (){
       Navigator.popAndPushNamed(context, MyApp.Login_Screen);
     });
     timer.tick;
     return const Scaffold(
       body: SafeArea(
-        child: Text("Hello there init screen"),
+        child: Center(child: Text("Multimedia Recommender \nSystem", textAlign: TextAlign.center,)),
       ),
     );
   }
