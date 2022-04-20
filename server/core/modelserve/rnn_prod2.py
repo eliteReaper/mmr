@@ -1,5 +1,4 @@
 
-from tkinter import TOP
 import pandas as pd
 from collections import defaultdict, deque
 import itertools
@@ -18,8 +17,9 @@ RATINGS_DATASET = "./data/ratings.csv"
 NUMBER_OF_USER_WATCHED_MIN = 25
 NUMBER_OF_MOVIES_WATCHED_MIN = 5
 TRAIN_TEST_SPLIT = 0.8
-SEQ_LEN = 10
+SEQ_LEN = 5
 TOP_N = 20
+TRAINED = False
 
 # # Preprocessing Movies Dataset
 
@@ -95,6 +95,19 @@ def one_hot_encode_movie_genre(movieId):
     # np.random.shuffle(encoded)
     return encoded
 
+def encode_rating(rating):
+    encoded = np.zeros(5, dtype=np.float32)
+    encoded[rating - 1] = 1
+    return encoded
+
+def encode_movie_genre_rating(movieId, rating):
+    # print(movieId, rating)
+    genre_encode = encode_movie_with_genre(movieId)
+    rating_encode = encode_rating(rating)
+    encoded = np.concatenate((genre_encode,rating_encode))
+    return encoded
+
+
 
 def sequentialize(ratings_df):
     ratings_df = ratings_df.dropna()
@@ -106,13 +119,17 @@ def sequentialize(ratings_df):
     X = []
     Y = []
     for user in tqdm(userIds):
-        user_seq = list(ratings_df[(ratings_df['userId'] == user)]['movieId'])
+        user_seq = ratings_df[(ratings_df['userId'] == user)]
         if len(user_seq) >= NUMBER_OF_MOVIES_WATCHED_MIN:
             sequence = deque(maxlen=SEQ_LEN)
-            for movieId in user_seq:
+            iter_dict = user_seq.to_dict('records')
+            for row in iter_dict:
+                movieId = row['movieId']
+                rating = int(row['rating'])
                 if movieId not in movie_mapper: continue
                 # sequence.append(movieId)
-                sequence.append(one_hot_encode_movie_genre(movieId))
+                sequence.append(encode_movie_genre_rating(movieId, rating))
+                # sequence.append(one_hot_encode_movie_genre(movieId))
                 # sequence.append(one_hot_encode_movie(movieId))
                 if len(sequence) == SEQ_LEN:
                     X.append(list(itertools.islice(sequence, 0, SEQ_LEN - 1)))
@@ -137,10 +154,10 @@ X_train, Y_train, X_test, Y_test = get_datasets()
 
 model = Sequential()
 
-model.add(LSTM(256, return_sequences=True))
+model.add(LSTM(128, return_sequences=True))
 model.add(Dropout(0.2))
 
-model.add(LSTM(256))
+model.add(LSTM(128))
 model.add(Dropout(0.1))
 
 # model.add(Dense(64, activation='relu'))
@@ -161,5 +178,7 @@ model.compile(
     metrics=[sps]
 )
 
-
-model.fit(X_train,Y_train,epochs=150,validation_data=(X_test, Y_test), batch_size=128)
+def fit_model():
+    global TRAINED
+    model.fit(X_train,Y_train,epochs=300,validation_data=(X_test, Y_test), batch_size=128)
+    TRAINED = True
