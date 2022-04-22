@@ -1,4 +1,6 @@
 
+from gc import callbacks
+from tabnanny import verbose
 import pandas as pd
 from collections import defaultdict, deque
 import itertools
@@ -6,36 +8,43 @@ import numpy as np
 # import dask.dataframe as dd
 from tqdm import tqdm
 import tensorflow as tf
-from server.core.modelserve.rnn_prod2 import map_movie_to_idx
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM # CuDNNLSTM
 from sklearn.model_selection import train_test_split
+from matplotlib import pyplot
 # from keras import backend as K
 
 
-MOVIES_DATASET = "./data/movies.csv"
-RATINGS_DATASET = "./data/ratings.csv"
+MOVIES_DATASET = "../data/movies2.csv"
+RATINGS_DATASET = "../data/ratings2.csv"
 
 
 class RNN:
     def __init__(self):
-        self.model = None
-        self.NUMBER_OF_USER_WATCHED_MIN = 25
-        self.NUMBER_OF_MOVIES_WATCHED_MIN = 5
+        self.NUMBER_OF_USER_WATCHED_MIN = 500
+        self.NUMBER_OF_MOVIES_WATCHED_MIN = 20
         self.TRAIN_TEST_SPLIT = 0.8
         self.SEQ_LEN = 5
-        self.TOP_N = 20
+        self.TOP_N = 250
         self.TRAINED = False
+        self.SEQUENCE_MAX_LEN = 100
+
+        self.model = None
+        self.history = None
+        self.samples = 0
+        self.timesteps = 0
+        self.features = 0
         self.movie_mapper = defaultdict(tuple)
         self.genre_mapper = defaultdict(int)
         self.all_genres = defaultdict(int)
         self.tf_batch_size = 128
-        self.epochs = 300
+        self.epochs = 100
+        self.patience = 20
     
     def map_movie_to_idx(self):
-        movies_df = pd.read_csv(MOVIES_DATASET)
+        movies_df = pd.read_csv(MOVIES_DATASET, sep='::')
         
-        ratings_df = pd.read_csv(RATINGS_DATASET)
+        ratings_df = pd.read_csv(RATINGS_DATASET, sep='::')
         movie_ids = ratings_df['movieId']
         movie_dict = defaultdict(int)
         for movie in movie_ids:
@@ -98,9 +107,9 @@ class RNN:
         encoded[rating - 1] = 1
         return encoded
 
-    def encode_movie_genre_rating(self, movieId, rating):
+    def one_hot_encode_movie_genre_rating(self, movieId, rating):
         # print(movieId, rating)
-        genre_encode = self.encode_movie_with_genre(movieId)
+        genre_encode = self.one_hot_encode_movie_genre(movieId)
         rating_encode = self.encode_rating(rating)
         encoded = np.concatenate((genre_encode,rating_encode))
         return encoded
@@ -124,25 +133,50 @@ class RNN:
                     rating = int(row['rating'])
                     if movieId not in self.movie_mapper: continue
                     # sequence.append(movieId)
-                    sequence.append(self.encode_movie_genre_rating(movieId, rating))
+                    sequence.append(self.one_hot_encode_movie_genre_rating(movieId, rating))
                     # sequence.append(one_hot_encode_movie_genre(movieId))
                     # sequence.append(one_hot_encode_movie(movieId))
                     if len(sequence) == self.SEQ_LEN:
-                        X.append(list(itertools.islice(sequence, 0,self. SEQ_LEN - 1)))
+                        X.append(list(itertools.islice(sequence, 0,self.SEQ_LEN - 1)))
                         Y.append(self.one_hot_encode_movie(movieId))
                         # Y.append(sequence[-1])
         return np.array(X), np.array(Y) # Required
+    
+    def sequentialize_v2(self, ratings_df):
+        ratings_df = ratings_df.dropna()
+        ratings_df = ratings_df.sort_values(by=['userId', 'timestamp'])
+        
+        ratings_df = ratings_df.dropna()
+        userIds = ratings_df['userId'].unique()
+        
+        X = []
+        Y = []
+        for user in tqdm(userIds):
+            user_seq = ratings_df[(ratings_df['userId'] == user)]
+            if len(user_seq) >= self.NUMBER_OF_MOVIES_WATCHED_MIN:
+                sequence = deque(maxlen=self.SEQUENCE_MAX_LEN)
+                iter_dict = user_seq.to_dict('records')
+                lastMovieId = -1
+                for row in iter_dict:
+                    movieId = row['movieId']
+                    rating = int(row['rating'])
+                    if movieId not in self.movie_mapper: continue
+                    sequence.append(self.one_hot_encode_movie_genre_rating(movieId, rating))
+                    lastMovieId = movieId
+                
+                if lastMovieId != -1:
+                    while len(sequence) < self.SEQUENCE_MAX_LEN:
+                        sequence.append([-1] * (len(self.movie_mapper) + len(self.all_genres) + 5))
+                    X.append(list(itertools.islice(sequence, 0, self.SEQUENCE_MAX_LEN- 1)))
+                    Y.append(self.one_hot_encode_movie(lastMovieId))
+        return np.array(X), np.array(Y) # Required
 
     def get_datasets(self):
-        ratings_df = pd.read_csv(RATINGS_DATASET)
+        ratings_df = pd.read_csv(RATINGS_DATASET, sep='::')
         ratings_df = ratings_df.dropna()
-        
-        sz = len(ratings_df)
-        # train_df = ratings_df[:int(TRAIN_TEST_SPLIT * sz)]
-        # test_df = ratings_df[int(TRAIN_TEST_SPLIT * sz):]
         train_df, test_df = train_test_split(ratings_df, train_size=self.TRAIN_TEST_SPLIT)
-        X_train, Y_train = self.sequentialize(train_df)
-        X_test, Y_test = self.sequentialize(test_df)
+        X_train, Y_train = self.sequentialize_v2(train_df)
+        X_test, Y_test = self.sequentialize_v2(test_df)
         
         return X_train, Y_train, X_test, Y_test
     
@@ -155,19 +189,22 @@ class RNN:
     
     def setup_model(self):
         self.model = Sequential()
+        self.model.add(tf.keras.layers.Masking(mask_value=-1.0, input_shape=(self.timesteps, self.features)))
 
-        self.model.add(LSTM(128, return_sequences=True))
-        self.model.add(Dropout(0.2))
+        # self.model.add(LSTM(64, return_sequences=True))
+        # self.model.add(Dropout(0.2))
 
         self.model.add(LSTM(128))
-        self.model.add(Dropout(0.1))
+        # self.model.add(Dropout(0.1))
+        self.model.add(Dropout(0.2))
 
-        # model.add(Dense(64, activation='relu'))
-        # model.add(Dropout(0.2))
+        # self.model.add(Dense(64, activation='relu'))
+        # self.model.add(Dropout(0.2))
 
         self.model.add(Dense(len(self.movie_mapper), activation='softmax'))
 
-        opt = tf.keras.optimizers.Adam(learning_rate=1e-5, decay=1e-6)
+        opt = tf.keras.optimizers.Adam(learning_rate=1e-4, decay=1e-6)
+
         # Compile model
         self.model.compile(
             loss='categorical_crossentropy',
@@ -178,6 +215,31 @@ class RNN:
     def train_model(self):
         self.map_x_to_idx()
         X_train, Y_train, X_test, Y_test = self.get_datasets()
+        self.samples, self.timesteps, self.features = X_train.shape
         self.setup_model()
-        self.model.fit(X_train,Y_train,epochs=self.epochs,validation_data=(X_test, Y_test), batch_size=self.tf_batch_size)
+        es = tf.keras.callbacks.EarlyStopping(monitor='val_sps', mode="max", patience=self.patience)
+        mc = tf.keras.callbacks.ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+        self.history = self.model.fit(X_train,Y_train,epochs=self.epochs,validation_data=(X_test, Y_test), batch_size=self.tf_batch_size, callbacks=[es, mc], verbose=False)
         self.TRAINED = True
+
+        saved_model = tf.keras.models.load_model('best_model.h5', custom_objects={"sps": self.sps})
+        # evaluate the model
+        _, train_acc = saved_model.evaluate(X_train, Y_train, verbose=0)
+        _, test_acc = saved_model.evaluate(X_test, Y_test, verbose=0)
+        print('Train: %.3f, Test: %.3f' % (train_acc, test_acc))
+
+        # pyplot.plot(self.history.history['loss'], label='train')
+        # pyplot.plot(self.history.history['val_loss'], label='test')
+        pyplot.plot(self.history.history['sps'], label='train')
+        pyplot.plot(self.history.history['val_sps'], label='test')
+        pyplot.legend()
+        pyplot.show()
+
+        pyplot.plot(self.history.history['loss'], label='train')
+        pyplot.plot(self.history.history['val_loss'], label='test')
+        pyplot.legend()
+        pyplot.show()
+
+if __name__ == '__main__':
+    rnn = RNN()
+    rnn.train_model()
