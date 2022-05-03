@@ -1,8 +1,8 @@
 from enum import Enum
 
 # Data Filepaths
-MOVIES_CSV="./data/movies.csv"
-RATINGS_CSV="./data/ratings.csv"
+MOVIES_CSV="./data/movies2.csv"
+RATINGS_CSV="./data/ratings2.csv"
 TAGS_CSV="./data/tags/csv"
 LINKS_CSV="./data/links.csv"
 
