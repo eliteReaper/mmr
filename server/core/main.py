@@ -2,6 +2,8 @@ import sys
 import pandas as pd
 import sklearn
 from sklearn.neighbors import NearestNeighbors
+from scipy.sparse import csr_matrix
+import numpy as np
 
 from consts import MOVIES_CSV, RATINGS_CSV, MediaType
 
@@ -42,6 +44,10 @@ def recommender(user, num_neighbors, num_recommendation, df, df1):
   distances, indices = knn.kneighbors(df.values, n_neighbors=number_neighbors)
 
   user_index = df.columns.tolist().index(user)
+  print(distances.shape, "\n", distances)
+  print("--------------")
+  print(indices.shape, "\n", indices)
+  
 
   for m,t in list(enumerate(df.index)):
     if df.iloc[m, user_index] == 0:
@@ -85,6 +91,33 @@ def recommender(user, num_neighbors, num_recommendation, df, df1):
       df1.iloc[m,user_index] = predicted_r
   get_recommendations(user,num_recommendation, df)
 
+def user_user(df):
+  user_movie_table_matrix = csr_matrix(df.values)
+  model_knn = NearestNeighbors(metric = 'cosine', algorithm = 'brute')
+  model_knn.fit(user_movie_table_matrix)
+  # query_index = np.random.choice(df.shape[0])
+  query_index = 354
+  distances, indices = model_knn.kneighbors(df.iloc[query_index,:].values.reshape(1,-1), n_neighbors = 10)
+  
+
+  movie = []
+  distance = []
+
+  for i in range(0, len(distances.flatten())):
+      if i != 0:
+          movie.append(df.index[indices.flatten()[i]])
+          distance.append(distances.flatten()[i])    
+
+  m=pd.Series(movie,name='movie')
+  d=pd.Series(distance,name='distance')
+  recommend = pd.concat([m,d], axis=1)
+  recommend = recommend.sort_values('distance',ascending=False)
+
+  print('Recommendations for {0}:\n'.format(df.index[query_index]))
+  for i in range(0,recommend.shape[0]):
+    print('{0}: {1}, with distance of {2}'.format(i, recommend["movie"].iloc[i], recommend["distance"].iloc[i]))
+  return recommend
+
 '''
     Argv:
         0: main.py
@@ -102,23 +135,26 @@ if __name__ == '__main__':
         timer.start()
 
         print("\n1. Movies...")
-        movies = pd.read_csv(MOVIES_CSV)
+        movies = pd.read_csv(MOVIES_CSV, sep="::")
         timer.lap()
 
         print("2. Ratings...")
         timer.start()
-        ratings = pd.read_csv(RATINGS_CSV)
+        ratings = pd.read_csv(RATINGS_CSV, sep="::")
         timer.lap()
 
         # Merging the df's
         print("\nMerging dfs and pivoting...")
         ratings_final_df = pd.merge(ratings, movies, how='inner', on='movieId')
-        df = ratings_final_df.pivot_table(index='title',columns='userId',values='rating').fillna(0)
+        print(ratings_final_df.head())
+        df = ratings_final_df.pivot_table(index='userId',columns='title',values='rating').fillna(0)
+        print(df.head())
         df1 = df.copy()
         timer.lap()
 
         
-        recommender(10, 10, 10, df, df1)
+        # recommender(1, 10, 10, df, df1)
+        user_user(df)
         timer.lap()
 
         timer.stop()

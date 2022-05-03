@@ -6,6 +6,9 @@ server/core/djangoserver/__pycache__
 server/core/modelserve/__pycache__
 server/core/modelserve/.ipynb_checkpoints/
 server/core/db.sqlite3
+server/core/data
+server/core/modelserve/data
+server/core/modelserve/ripple_net/data
 
 # Node
 server/node_modules
