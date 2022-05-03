@@ -1,6 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.team_proj_mmr.mmr_app">
-
+    package="com.team_proj_mmr.mmr_app.mmr_app">
    <application
         android:label="mmr_app"
         android:name="${applicationName}"
@@ -31,6 +30,5 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
     </application>
 </manifest>

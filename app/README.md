@@ -1,6 +1,6 @@
 # mmr_app
 
-A multimedia recommender system app created in flutter
+A new Flutter project.
 
 ## Getting Started
 

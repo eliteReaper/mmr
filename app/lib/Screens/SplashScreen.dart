@@ -3,10 +3,9 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mmr_app/main.dart';
-import 'package:mmr_app/utils/authentication_google.dart';
 
-class InitialScreen extends StatelessWidget {
-  const InitialScreen({Key? key}) : super(key: key);
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +13,9 @@ class InitialScreen extends StatelessWidget {
       Navigator.popAndPushNamed(context, MyApp.Login_Screen);
     });
     timer.tick;
-    return const Scaffold(
-      body: SafeArea(
-        child: Center(child: Text("Multimedia Recommender \nSystem", textAlign: TextAlign.center,)),
+    return const SafeArea(
+      child: Scaffold(
+        body: Text("Splash screen only"),
       ),
     );
   }

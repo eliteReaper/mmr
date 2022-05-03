@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "1022198995996",
-    "project_id": "mmr-system",
-    "storage_bucket": "mmr-system.appspot.com"
+    "project_number": "363783106594",
+    "project_id": "mmr-systemm",
+    "storage_bucket": "mmr-systemm.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1022198995996:android:a42e855678cbbc6f9ad3d9",
+        "mobilesdk_app_id": "1:363783106594:android:ca1555ad993ca8c0271a7b",
         "android_client_info": {
-          "package_name": "com.team_proj_mmr.mmr_app"
+          "package_name": "com.team_proj_mmr.mmr_app.mmr_app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1022198995996-e6eqr7eikiqeu3topf6u2umhjtgillca.apps.googleusercontent.com",
+          "client_id": "363783106594-16bseepl8cm2p8t2vo5dgrem2to02c8r.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBC2WwEgonOdDkKL_o-SSdjx8cZX5Km3eQ"
+          "current_key": "AIzaSyAunVbV0qDn0ywunfw32BeHCXGjFQ_3gFc"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1022198995996-e6eqr7eikiqeu3topf6u2umhjtgillca.apps.googleusercontent.com",
+              "client_id": "363783106594-16bseepl8cm2p8t2vo5dgrem2to02c8r.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
