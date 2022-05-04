@@ -17,3 +17,5 @@ server/node_modules
 key
 env
 .idea
+
+app/
