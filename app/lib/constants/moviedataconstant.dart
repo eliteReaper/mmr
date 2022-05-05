@@ -99,3 +99,5 @@ List<String> movie = [
   "Lamerica (1994)",
   "Big Green",
 ];
+
+List<String> rating = [];
