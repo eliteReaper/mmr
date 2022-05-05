@@ -68,6 +68,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             password: _passwordTextController.text)
                             .then((value) {
                           print("Created New Account");
+                          User? user = FirebaseAuth.instance.currentUser;
+                          user?.updateProfile(displayName: _userNameTextController.text);
                           Navigator.popAndPushNamed(context, MyApp.Main_Screen);
                           // Navigator.push(context,
                           //     MaterialPageRoute(builder: (context) => HomeScreen()));

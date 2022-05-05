@@ -54,6 +54,7 @@ android {
         applicationId "com.team_proj_mmr.mmr_app.mmr_app"
         minSdkVersion flutter.minSdkVersion
         multiDexEnabled true
+        minSdkVersion 19
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
