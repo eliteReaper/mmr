@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import '../main.dart';
 import '../util/color_utils.dart';
@@ -70,11 +72,20 @@ class _SignupScreenState extends State<SignupScreen> {
                           print("Created New Account");
                           User? user = FirebaseAuth.instance.currentUser;
                           user?.updateProfile(displayName: _userNameTextController.text);
+                          Map < String, int > mp = Map();
+                          mp[FirebaseAuth.instance.currentUser!.uid] = 10;
+                          FirebaseDatabase.instance.ref('user').child(FirebaseAuth.instance.currentUser!.uid.toString()).set(mp).asStream();
                           Navigator.popAndPushNamed(context, MyApp.Main_Screen);
                           // Navigator.push(context,
                           //     MaterialPageRoute(builder: (context) => HomeScreen()));
                         }).onError((error, stackTrace) {
                           print("Error ${error.toString()}");
+                          Fluttertoast.showToast(
+                              msg: error.toString().split("]")[1].trim(),
+                              toastLength: Toast.LENGTH_LONG,
+                              gravity: ToastGravity.SNACKBAR
+                            // webPosition: AlignmentDirectional.center,
+                          );
                         });
                       })
                     ],
