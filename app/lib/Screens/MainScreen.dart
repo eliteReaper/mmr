@@ -13,6 +13,9 @@ import 'Pages/game_page.dart';
 import 'Pages/movie_page.dart';
 import 'Pages/music_page.dart';
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 class TempScreen extends StatelessWidget {
   const TempScreen({Key? key}) : super(key: key);
 
@@ -31,6 +34,48 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
+class Recommendation {
+  int? movieId;
+  int? movieFrequency;
+  Recommendation({this.movieId, this.movieFrequency});
+  Recommendation.fromJson(Map<String, dynamic> json) {
+    movieId = json["movieId"];
+    movieFrequency = json["movieFrequency"];
+  }
+  Map<String, dynamic> toJson() => {
+        'movieId': movieId,
+        'movieFrequency': movieFrequency,
+      };
+  factory Recommendation.fromMap(Map<String, dynamic> json) {
+    return Recommendation(
+      movieId: json['movieId'],
+      movieFrequency: json['movieFrequency'],
+    );
+  }
+}
+
+class Recommendations {
+  List<Recommendation>? recommendations;
+  Recommendations({this.recommendations});
+  Recommendations.fromJson(Map<String, dynamic> json) {
+    recommendations = json["recommendations"];
+  }
+  Map<String, dynamic> toJson() => {
+        'recommendations': recommendations,
+      };
+}
+
+class PayloadObject {
+  final String movieId;
+  final int rating;
+
+  PayloadObject({required this.movieId, required this.rating});
+  Map<String, dynamic> toJson() => {
+        'movieId': movieId,
+        'rating': rating,
+      };
+}
+
 class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
   // ignore: non_constant_identifier_names
@@ -44,6 +89,41 @@ class _MainScreenState extends State<MainScreen> {
     // const GamePage(),
     AccountPage(),
   ];
+
+  Recommendations parseRecommendations(String responseBody) {
+    final parsed =
+        json.decode(responseBody).cast<Map<String, List<Map<String, int>>>>();
+    List<Recommendation> list = parsed["recommendations"]
+        .map<Recommendation>((json) => Recommendation.fromMap(json))
+        .toList();
+    return Recommendations(recommendations: list);
+  }
+
+  Future<Recommendations> fetchRecommendation() async {
+    List<PayloadObject> payload = [
+      PayloadObject(movieId: "1193", rating: 5),
+      PayloadObject(movieId: "661", rating: 3)
+    ];
+    final response = await http.post(
+      Uri(host: "127.0.0.1", port: 8000, path: "/model/predict_ripple_net/"),
+      body: jsonEncode(
+        <String, dynamic>{'userId': 10, 'sequence': payload},
+      ),
+      headers: {
+        "Accept": "application/json",
+        "Access-Control-Allow-Origin": "http://127.0.0.1:8000/",
+      },
+    );
+    var parsedBody = parseRecommendations(response.body);
+    print("PRINTING RESULT");
+    print(parsedBody);
+    if (response.statusCode == 200) {
+      return parsedBody;
+    } else {
+      throw Exception('Unable to fetch products from the REST API');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,6 +139,7 @@ class _MainScreenState extends State<MainScreen> {
             List<CustomUser> user_list = [];
             ref.child(user).once().then(
               (snapshot) {
+                print("OVER HERE");
                 Map<String, String> mp = Map();
                 for (var snap in snapshot.snapshot.children) {
                   // print(snap.key.toString());
@@ -94,7 +175,16 @@ class _MainScreenState extends State<MainScreen> {
                         ],
                       );
                     });
-              } else {}
+              } else {
+                print("HELLO THERE");
+                fetchRecommendation().then(
+                  (value) => {
+                    print(
+                      value.toString(),
+                    ),
+                  },
+                );
+              }
             });
             // TODO: Call the recommender system to provide with the recommendation based on the index for the page :)
           },

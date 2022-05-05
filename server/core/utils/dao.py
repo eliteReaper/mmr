@@ -11,7 +11,7 @@ class DAO:
         movie_dict = {"movies": []}
         iter_dict = df.to_dict('records')
         for row in iter_dict:
-            movieId, title, genres = str(row['movieId']), str(row['title']), str(row['genres']).split("|")
+            movieId, title, genres = str(row['movieId']), str(row['title']), str(row['genres'])
             movie_dict["movies"].append({"movieId": movieId, "title": title, "genres": genres})
         return movie_dict
     
