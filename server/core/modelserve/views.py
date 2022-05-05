@@ -8,9 +8,7 @@ import os
 import gc
 import json
 from memory_profiler import profile
-import pandas as pd
-import tqdm
-from collections import deque
+from utils.dao import DAO
 
 def predict_rnn(request):
     rnn = RNN()
@@ -27,6 +25,18 @@ def predict_rnn(request):
         res_json["recommendations"].append({"movieId" : i[0], "title": i[1]})
     return JsonResponse(res_json)
 
+def get_all_movies(request):
+    db = DAO()
+    res = db.get_all_movies()
+    return JsonResponse(res)
+
+def get_user_rated_movies(request):
+    db = DAO()
+    body_unicode = request.body.decode('utf-8')
+    body = json.loads(body_unicode)
+    userId = body['userId']
+    res = db.get_ratings_for_user(userId)
+    return JsonResponse(res)
 
 def predict_ripple_net(request):
     body_unicode = request.body.decode('utf-8')
