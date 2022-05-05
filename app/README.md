@@ -1,6 +1,6 @@
 # mmr_app
 
-A new Flutter project.
+A flutter app that is a media recommender system and suggest the media to the users. 
 
 ## Getting Started
 
