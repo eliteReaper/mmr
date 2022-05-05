@@ -52,6 +52,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '363783106594',
     projectId: 'mmr-systemm',
     storageBucket: 'mmr-systemm.appspot.com',
+    databaseURL: 'https://mmr-systemm-default-rtdb.firebaseio.com/',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -62,5 +63,6 @@ class DefaultFirebaseOptions {
     storageBucket: 'mmr-systemm.appspot.com',
     iosClientId: '363783106594-ulke18av15eiotcqgujhsajue4942bdv.apps.googleusercontent.com',
     iosBundleId: 'com.teamprojmmr.mmrapp.mmrApp',
+    databaseURL: 'https://mmr-systemm-default-rtdb.firebaseio.com/'
   );
 }

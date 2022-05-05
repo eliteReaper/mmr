@@ -1,4 +1,8 @@
+import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import '../themes.dart';
 
 Image logoWidget(String imageName) {
   return Image.asset(
@@ -63,6 +67,41 @@ Container firebaseUIButton(BuildContext context, String title, Function onTap) {
           }),
           shape: MaterialStateProperty.all<RoundedRectangleBorder>(
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)))),
+    ),
+  );
+}
+
+Widget custombox(BuildContext context, String title, Icon icon) {
+  return Card(
+    elevation: 5,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(15.0),
+    ),
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            Colors.white10,
+            Colors.white,
+          ],
+        ),
+      ),
+      child: Row(
+        children: [
+          icon,
+          SizedBox(width: 10,),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
