@@ -56,10 +56,23 @@ def predict_ripple_net(request):
     del ripple_net
     gc.collect()
     res_json = {"recommendations": []}
-    for i in res:
-        res_json["recommendations"].append({"movieId": int(i[0]), "movieFreq": int(i[1])})
+    movie_list = [int(e[0]) for e in res]
+    dao = DAO()
+    movies = dao.get_movie_from_ids(movie_list)
+
+    for idx, i in enumerate(movies):
+        if idx > 9: break
+        res_json["recommendations"].append({"movieId": i, "movieFreq": res[idx][1]})
 
     return JsonResponse(res_json)
+
+def get_movie_from_id(request):
+    body_unicode = request.body.decode('utf-8')
+    body = json.loads(body_unicode)
+    dao = DAO()
+    movie_list = [e["movideId"] for e in body["movies"]]
+    movies = dao.get_movie_from_ids(movie_list)
+    return JsonResponse({"recommendations" : movies})
 
 def get_accuracy(request):
     if request.method == "POST":

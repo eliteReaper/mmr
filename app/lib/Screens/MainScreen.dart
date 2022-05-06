@@ -35,7 +35,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class Recommendation {
-  int? movieId;
+  String? movieId;
   int? movieFrequency;
   Recommendation({this.movieId, this.movieFrequency});
   Recommendation.fromJson(Map<String, dynamic> json) {
@@ -49,7 +49,7 @@ class Recommendation {
   factory Recommendation.fromMap(Map<String, dynamic> json) {
     return Recommendation(
       movieId: json['movieId'],
-      movieFrequency: json['movieFrequency'],
+      movieFrequency: json['movieFreq'],
     );
   }
 }
@@ -91,8 +91,7 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   Recommendations parseRecommendations(String responseBody) {
-    final parsed =
-        json.decode(responseBody).cast<Map<String, List<Map<String, int>>>>();
+    final parsed = json.decode(responseBody);
     List<Recommendation> list = parsed["recommendations"]
         .map<Recommendation>((json) => Recommendation.fromMap(json))
         .toList();
@@ -109,10 +108,6 @@ class _MainScreenState extends State<MainScreen> {
       body: jsonEncode(
         <String, dynamic>{'userId': 10, 'sequence': payload},
       ),
-      headers: {
-        "Accept": "application/json",
-        "Access-Control-Allow-Origin": "http://127.0.0.1:8000/",
-      },
     );
     var parsedBody = parseRecommendations(response.body);
     print("PRINTING RESULT");
@@ -179,9 +174,9 @@ class _MainScreenState extends State<MainScreen> {
                 print("HELLO THERE");
                 fetchRecommendation().then(
                   (value) => {
-                    print(
-                      value.toString(),
-                    ),
+                    print("in recommendation"),
+                    showAlertDialog(context, value),
+                    print(value.toString()),
                   },
                 );
               }
@@ -227,4 +222,64 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
+}
+
+showAlertDialog(BuildContext context, Recommendations recommendations) {
+  // Create button
+  Widget okButton = ElevatedButton(
+    child: const Text("OK"),
+    onPressed: () {
+      Navigator.of(context).pop();
+    },
+  );
+
+  // Create AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("Suggested Movies"),
+    content: Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      width: MediaQuery.of(context).size.width * 0.7,
+      child: Container(
+          child: ListView.builder(
+        physics: ClampingScrollPhysics(),
+        itemCount: recommendations.recommendations?.length ?? 0,
+        itemBuilder: (BuildContext context, int index) {
+          return Card(
+            elevation: 0,
+            child: Row(
+              children: [
+                Text(
+                  (index + 1).toString() +
+                      ". " +
+                      recommendations.recommendations![index].movieId
+                          .toString(),
+                  style: const TextStyle(fontSize: 15),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Text(
+                  "Priority: " +
+                      recommendations.recommendations![index].movieFrequency
+                          .toString(),
+                  style: const TextStyle(fontSize: 15),
+                )
+              ],
+            ),
+          );
+        },
+      )),
+    ),
+    actions: [
+      okButton,
+    ],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
 }

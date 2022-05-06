@@ -8,5 +8,6 @@ urlpatterns = [
     path('train_ripple_net/', views.train_ripple_net),
     path('get_accuracy/', views.get_accuracy),
     path('get_all_movies', views.get_all_movies),
-    path('get_user_rated_movies', views.get_user_rated_movies)
+    path('get_user_rated_movies', views.get_user_rated_movies),
+    path('get_movie_from_id', views.get_movie_from_id)
 ]
